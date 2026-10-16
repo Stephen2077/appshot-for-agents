@@ -7,6 +7,8 @@ struct Record: Codable {
     var text: String
     var text_source: String   // "accessibility" | "ocr" | "none"
     var char_count: Int
+    var nodes_visited: Int
+    var truncated: Bool       // AX walk hit a limit (nodes / chars / depth / 3 s)
     var timestamp: String
     var image_path: String
     var json_path: String

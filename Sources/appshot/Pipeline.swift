@@ -78,6 +78,8 @@ final class Pipeline {
             text: text,
             text_source: source,
             char_count: text.count,
+            nodes_visited: ax.nodesVisited,
+            truncated: ax.truncated,
             timestamp: Store.timestamp(),
             image_path: Store.imageURL.path,
             json_path: Store.jsonURL.path
@@ -89,7 +91,7 @@ final class Pipeline {
             return
         }
         NSSound(named: NSSound.Name("Pop"))?.play()
-        log("Captured \(name) (\(record.char_count) chars via \(source)) -> \(Store.directory.path)/latest.{png,json}; image copied to clipboard.")
+        log("Captured \(name) (\(record.char_count) chars via \(source), \(ax.nodesVisited) AX nodes\(ax.truncated ? ", TRUNCATED by limits" : "")) -> \(Store.directory.path)/latest.{png,json}; image copied to clipboard.")
 
         // Animation plays only after the screenshot has been taken and saved, so it never appears in the capture.
         // The overlay is a non-activating, click-through window: focus stays in the user's original input.

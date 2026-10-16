@@ -12,7 +12,7 @@ An open-source **Appshots for any AI agent** on macOS. Press a hotkey and get a 
 3. Window text is read via the Accessibility (AX) tree. **Only if AX returns (almost) nothing** does it fall back to Apple Vision OCR.
 4. The image goes to the **clipboard**, and appshot **auto-pastes it (simulated ⌘V) into the input box you were typing in** — Claude/ChatGPT web, the Claude desktop app, Slack, … A small “Pasted into <app>” pill confirms it. Both files are also written:
    - `~/.appshot/latest.png`
-   - `~/.appshot/latest.json` — `{ app, bundle_id, window_title, text, text_source, char_count, timestamp, image_path, json_path }`
+   - `~/.appshot/latest.json` — `{ app, bundle_id, window_title, text, text_source, char_count, nodes_visited, truncated, timestamp, image_path, json_path }` (`text_source` is `accessibility`, `ocr` or `none`; `truncated: true` means a safety limit cut the walk short)
 5. A short transition plays *after* the capture (see below).
 
 ## Install & run (macOS 14+, Swift 5.9+ / Xcode CLT)
@@ -41,6 +41,12 @@ Restart `appshot` after granting. `appshot --check` prints the current status.
 | `double-command` (also `double-option`, …) | tap the key twice quickly |
 
 Also settable with `APPSHOT_HOTKEY=double-command`. Menu bar → "Capture frontmost window now" works too, and `appshot --once` captures after 3 seconds and exits.
+
+## How the window text is extracted (and its limits)
+
+appshot walks the **entire** Accessibility tree of the focused window (not only the visible part): every element's `AXChildren`, plus `AXRows` / `AXContents` for lists, tables and scroll areas, reading `AXValue`, `AXTitle` and `AXDescription`. Elements are de-duplicated, order is kept. Limits: 50,000 nodes, 200,000 characters, depth 60, 3 s total (`truncated` in the JSON tells you if one was hit). For Chromium/Electron apps (Claude/ChatGPT web, Slack, VS Code, …) it first sets `AXManualAccessibility` and `AXEnhancedUserInterface` so the web tree exists; the first capture of such an app waits ~0.5 s for it to build.
+
+Honest limitation: appshot can only read what the target app *exposes*. Chat UIs built on Chromium/Electron usually **virtualize long lists** — messages scrolled far out of view are not in the DOM, so they are not in the AX tree either, and no AX-based tool can read them. If a capture is shorter than the whole conversation, that is why. (An optional "auto-scroll and stitch" capture is a possible follow-up; it is not implemented.) If AX yields almost nothing, Vision OCR of the screenshot is used instead.
 
 ## Auto-paste into the focused input
 
