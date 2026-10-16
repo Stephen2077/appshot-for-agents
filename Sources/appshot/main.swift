@@ -74,6 +74,7 @@ if options.check {
     print("accessibility:     \(AXText.isTrusted(prompt: false) ? "granted" : "NOT granted")")
     print("screen recording:  \(WindowCapture.hasScreenPermission ? "granted" : "NOT granted")")
     print("animation:         \(options.animation ? "on" : "off")")
+    print("auto-paste:        \(options.autoPaste ? (options.pasteText ? "image + text" : "image") : "off")")
     print("output:            \(Store.directory.path)")
     exit(0)
 }

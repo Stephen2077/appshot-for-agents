@@ -5,6 +5,7 @@ final class Pipeline {
     var options: Options
     private var busy = false
     private let animator = CaptureAnimator()
+    private let toast = Toast()
     private var lastNonSelf: NSRunningApplication?
     private var observer: NSObjectProtocol?
 
@@ -91,8 +92,25 @@ final class Pipeline {
         log("Captured \(name) (\(record.char_count) chars via \(source)) -> \(Store.directory.path)/latest.{png,json}; image copied to clipboard.")
 
         // Animation plays only after the screenshot has been taken and saved, so it never appears in the capture.
+        // The overlay is a non-activating, click-through window: focus stays in the user's original input.
+        var animation: Task<Void, Never>?
         if options.animation {
-            await animator.play(image: shot.image, windowFrame: shot.frame)
+            let image = shot.image, frame = shot.frame
+            animation = Task { @MainActor in await self.animator.play(image: image, windowFrame: frame) }
         }
+
+        var message = "Copied to clipboard"
+        if options.autoPaste {
+            let result = await Paster.paste(
+                targetPID: pid, image: shot.image,
+                text: options.pasteText ? text : nil
+            )
+            message = result.message(appName: name)
+            log(message)
+        } else {
+            log("Auto-paste off; image is on the clipboard.")
+        }
+        toast.show(message, windowFrame: shot.frame)
+        await animation?.value
     }
 }

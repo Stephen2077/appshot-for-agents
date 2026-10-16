@@ -10,7 +10,7 @@ An open-source **Appshots for any AI agent** on macOS. Press a hotkey and get a 
 1. Hotkey pressed (default: **left ⌥ + right ⌥** together).
 2. Front window is captured with ScreenCaptureKit.
 3. Window text is read via the Accessibility (AX) tree. **Only if AX returns (almost) nothing** does it fall back to Apple Vision OCR.
-4. The image goes to the **clipboard** (just ⌘V it into any chat) and both files are written:
+4. The image goes to the **clipboard**, and appshot **auto-pastes it (simulated ⌘V) into the input box you were typing in** — Claude/ChatGPT web, the Claude desktop app, Slack, … A small “Pasted into <app>” pill confirms it. Both files are also written:
    - `~/.appshot/latest.png`
    - `~/.appshot/latest.json` — `{ app, bundle_id, window_title, text, text_source, char_count, timestamp, image_path, json_path }`
 5. A short transition plays *after* the capture (see below).
@@ -41,6 +41,15 @@ Restart `appshot` after granting. `appshot --check` prints the current status.
 | `double-command` (also `double-option`, …) | tap the key twice quickly |
 
 Also settable with `APPSHOT_HOTKEY=double-command`. Menu bar → "Capture frontmost window now" works too, and `appshot --once` captures after 3 seconds and exits.
+
+## Auto-paste into the focused input
+
+Like Codex Appshots, the capture goes where you are typing: start writing your message in any chat box, press the hotkey, and the window screenshot appears as an attachment in that box.
+
+- Default: paste the **image** only. `--paste-text` additionally pastes the window **text** right after the image (your clipboard ends up holding the screenshot). `--no-paste` turns auto-paste off (clipboard + `~/.appshot` files only). Env: `APPSHOT_PASTE=0`, `APPSHOT_PASTE_TEXT=1`.
+- It waits until you release the hotkey (so it sends a clean ⌘V, not ⌘⌥V), and only pastes if the same app is still frontmost. The animation overlay and the pill are non-activating, click-through windows, so focus never leaves your input.
+- Needs the **Accessibility** permission (same one used to read window text). Without it, the image is still on the clipboard and the pill says so.
+- Apps that don't accept pasted images simply ignore it; use `latest.png`/`latest.json` there.
 
 ## Capture animation
 
