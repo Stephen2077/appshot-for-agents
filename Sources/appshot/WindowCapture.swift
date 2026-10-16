@@ -35,7 +35,7 @@ enum WindowCapture {
         return nil
     }
 
-    static func capture(pid: pid_t, appName: String) async throws -> (image: CGImage, title: String?) {
+    static func capture(pid: pid_t, appName: String) async throws -> (image: CGImage, title: String?, frame: CGRect) {
         guard hasScreenPermission else {
             _ = CGRequestScreenCaptureAccess()
             throw CaptureError.noScreenPermission
@@ -52,6 +52,6 @@ enum WindowCapture {
         config.height = max(1, Int(filter.contentRect.height * scale))
         config.showsCursor = false
         let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
-        return (image, window.title)
+        return (image, window.title, window.frame)  // frame: global top-left-origin points
     }
 }
