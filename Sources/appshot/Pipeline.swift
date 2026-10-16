@@ -1,9 +1,10 @@
 import AppKit
 
-/// hotkey -> window image + AX text (Vision OCR fallback) -> clipboard + ~/.appshot -> optional voice.
+/// hotkey -> window image + AX text (Vision OCR fallback) -> clipboard + ~/.appshot -> transition animation.
 final class Pipeline {
     var options: Options
     private var busy = false
+    private let animator = CaptureAnimator()
     private var lastNonSelf: NSRunningApplication?
     private var observer: NSObjectProtocol?
 
@@ -50,7 +51,7 @@ final class Pipeline {
         // AX text first (no OCR), off the main thread.
         let ax = await Task.detached { AXText.extract(pid: pid) }.value
 
-        let shot: (image: CGImage, title: String?)
+        let shot: (image: CGImage, title: String?, frame: CGRect)
         do {
             shot = try await WindowCapture.capture(pid: pid, appName: name)
         } catch {
@@ -89,9 +90,9 @@ final class Pipeline {
         NSSound(named: NSSound.Name("Pop"))?.play()
         log("Captured \(name) (\(record.char_count) chars via \(source)) -> \(Store.directory.path)/latest.{png,json}; image copied to clipboard.")
 
-        if options.speak {
-            let line = Voice.announcement(app: name, chars: record.char_count, text: text, lang: options.lang, includeSummary: options.speakText)
-            await Voice.speak(line, lang: options.lang)
+        // Animation plays only after the screenshot has been taken and saved, so it never appears in the capture.
+        if options.animation {
+            await animator.play(image: shot.image, windowFrame: shot.frame)
         }
     }
 }

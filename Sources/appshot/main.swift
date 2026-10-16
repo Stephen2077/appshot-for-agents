@@ -6,7 +6,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let pipeline: Pipeline
     private var monitor: HotKeyMonitor?
     private var statusItem: NSStatusItem?
-    private var speakItem: NSMenuItem?
 
     init(options: Options) {
         pipeline = Pipeline(options: options)
@@ -44,11 +43,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let capture = NSMenuItem(title: "Capture frontmost window now", action: #selector(captureNow), keyEquivalent: "")
         capture.target = self
         menu.addItem(capture)
-        let speak = NSMenuItem(title: "Speak result (ElevenLabs / say)", action: #selector(toggleSpeak), keyEquivalent: "")
-        speak.target = self
-        speak.state = pipeline.options.speak ? .on : .off
-        speakItem = speak
-        menu.addItem(speak)
         let open = NSMenuItem(title: "Open ~/.appshot", action: #selector(openFolder), keyEquivalent: "")
         open.target = self
         menu.addItem(open)
@@ -61,11 +55,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func captureNow() {
         // Let the menu close and the previous app become frontmost again.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { self.pipeline.trigger() }
-    }
-
-    @objc private func toggleSpeak() {
-        pipeline.options.speak.toggle()
-        speakItem?.state = pipeline.options.speak ? .on : .off
     }
 
     @objc private func openFolder() {
@@ -84,8 +73,7 @@ if options.check {
     print("hotkey:            \(options.hotKey.label)")
     print("accessibility:     \(AXText.isTrusted(prompt: false) ? "granted" : "NOT granted")")
     print("screen recording:  \(WindowCapture.hasScreenPermission ? "granted" : "NOT granted")")
-    print("ElevenLabs key:    \(Voice.hasElevenLabsKey ? "set (ELEVENLABS_API_KEY)" : "not set (will use `say`)")")
-    print("speak:             \(options.speak ? "on" : "off")")
+    print("animation:         \(options.animation ? "on" : "off")")
     print("output:            \(Store.directory.path)")
     exit(0)
 }
