@@ -5,6 +5,7 @@ struct Options {
     var animation = true
     var autoPaste = true
     var pasteText = false
+    var hint = true
     var once = false
     var check = false
     var help = false
@@ -18,11 +19,12 @@ struct Options {
       --no-animation    disable the capture transition animation
       --no-paste        don't auto-paste into the focused app (only clipboard + ~/.appshot files)
       --paste-text      after the image, also paste the window text into the focused input
+      --no-hint         don't paste the one-line "[appshot] ... saved at <path>" hint after the image
       --once            capture the frontmost window once (after 3s) and exit
       --check           print permission / config status and exit
       --help            show this help
 
-    Environment: APPSHOT_HOTKEY, APPSHOT_ANIMATION=0, APPSHOT_PASTE=0, APPSHOT_PASTE_TEXT=1
+    Environment: APPSHOT_HOTKEY, APPSHOT_ANIMATION=0, APPSHOT_PASTE=0, APPSHOT_PASTE_TEXT=1, APPSHOT_HINT=0
     Output: ~/.appshot/latest.png, ~/.appshot/latest.json (+ image on the clipboard)
     """
 
@@ -30,6 +32,7 @@ struct Options {
         var o = Options()
         let env = ProcessInfo.processInfo.environment
         if let h = env["APPSHOT_HOTKEY"], let k = HotKey(h) { o.hotKey = k }
+        if ["0", "false", "no", "off"].contains((env["APPSHOT_HINT"] ?? "").lowercased()) { o.hint = false }
         if ["0", "false", "no", "off"].contains((env["APPSHOT_PASTE"] ?? "").lowercased()) { o.autoPaste = false }
         if ["1", "true", "yes", "on"].contains((env["APPSHOT_PASTE_TEXT"] ?? "").lowercased()) { o.pasteText = true }
         if ["0", "false", "no", "off"].contains((env["APPSHOT_ANIMATION"] ?? "").lowercased()) { o.animation = false }
@@ -43,6 +46,7 @@ struct Options {
             case "--no-animation": o.animation = false
             case "--no-paste": o.autoPaste = false
             case "--paste-text": o.pasteText = true
+            case "--no-hint": o.hint = false
             case "--once": o.once = true
             case "--check": o.check = true
             case "--help", "-h": o.help = true
