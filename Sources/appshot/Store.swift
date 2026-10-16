@@ -35,6 +35,11 @@ enum Store {
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         try encoder.encode(record).write(to: jsonURL, options: .atomic)
 
+        copyToClipboard(image: image, png: pngData)
+    }
+
+    static func copyToClipboard(image: CGImage, png pngData: Data? = nil) {
+        guard let pngData = pngData ?? png(from: image) else { return }
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.declareTypes([.png, .tiff], owner: nil)
