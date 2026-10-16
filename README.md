@@ -42,6 +42,27 @@ Restart `appshot` after granting. `appshot --check` prints the current status.
 
 Also settable with `APPSHOT_HOTKEY=double-command`. Menu bar → "Capture frontmost window now" works too, and `appshot --once` captures after 3 seconds and exits.
 
+## Telling any agent about the capture
+
+You can't change how someone else's agent UI works, so appshot also pastes **one short hint line** (no Enter is pressed) right after the image, with the real absolute paths:
+
+```
+[appshot] Screenshot of "Safari – Deploy Guide" saved at /Users/you/.appshot/latest.png ; extracted text and metadata in /Users/you/.appshot/latest.json
+```
+
+Order: image → hint line (after ~0.3 s) → window text (only with `--paste-text`). Agents that can read local files (Claude Code, Codex CLI, Cursor, …) can open those two files; chat apps that accept the pasted image just see it plus the line. Turn it off with `--no-hint` or `APPSHOT_HINT=0`.
+
+For Claude Code / Codex, add this to your `CLAUDE.md` / `AGENTS.md`:
+
+```md
+## appshot
+When a message contains a line starting with `[appshot]`, the user captured a window.
+Read the PNG path (view the image) and the JSON path (`app`, `window_title`, `text`, `text_source`,
+`truncated`) from that line and use them as context for the request.
+```
+
+If an app can't take pasted images or text, just tell the agent: *"read ~/.appshot/latest.json and ~/.appshot/latest.png"*.
+
 ## How the window text is extracted (and its limits)
 
 appshot walks the **entire** Accessibility tree of the focused window (not only the visible part): every element's `AXChildren`, plus `AXRows` / `AXContents` for lists, tables and scroll areas, reading `AXValue`, `AXTitle` and `AXDescription`. Elements are de-duplicated, order is kept. Limits: 50,000 nodes, 200,000 characters, depth 60, 3 s total (`truncated` in the JSON tells you if one was hit). For Chromium/Electron apps (Claude/ChatGPT web, Slack, VS Code, …) it first sets `AXManualAccessibility` and `AXEnhancedUserInterface` so the web tree exists; the first capture of such an app waits ~0.5 s for it to build.

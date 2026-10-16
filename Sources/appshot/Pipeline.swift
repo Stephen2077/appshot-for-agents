@@ -105,6 +105,7 @@ final class Pipeline {
         if options.autoPaste {
             let result = await Paster.paste(
                 targetPID: pid, image: shot.image,
+                hint: options.hint ? Self.hintLine(record) : nil,
                 text: options.pasteText ? text : nil
             )
             message = result.message(appName: name)
@@ -114,5 +115,13 @@ final class Pipeline {
         }
         toast.show(message, windowFrame: shot.frame)
         await animation?.value
+    }
+
+    /// One line telling any agent where the capture lives. Single line, so pasting never submits the message.
+    static func hintLine(_ r: Record) -> String {
+        let clean = { (s: String) in s.replacingOccurrences(of: "\n", with: " ").trimmingCharacters(in: .whitespaces) }
+        let title = clean(r.window_title)
+        let what = title.isEmpty ? clean(r.app) : "\(clean(r.app)) \u{2013} \(title)"
+        return "[appshot] Screenshot of \"\(what)\" saved at \(r.image_path) ; extracted text and metadata in \(r.json_path) "
     }
 }
