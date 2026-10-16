@@ -22,7 +22,7 @@ enum AXText {
 
     static func extract(pid: pid_t, maxNodes: Int = 8000, maxChars: Int = 200_000, deadline: TimeInterval = 2.5) -> Result {
         let app = AXUIElementCreateApplication(pid)
-        AXUIElementSetMessagingTimeout(app, 0.5)
+        AXUIElementSetMessagingTimeout(AXUIElementCreateSystemWide(), 0.5)  // global per-call timeout
         // Ask Chromium/Electron apps to expose their web accessibility tree.
         AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
 

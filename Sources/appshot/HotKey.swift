@@ -80,6 +80,10 @@ final class HotKeyMonitor {
             self?.flagsChanged(e)
             return e
         }) { monitors.append(m) }
+        if let m = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: { [weak self] e in
+            self?.resetTap()
+            return e
+        }) { monitors.append(m) }
     }
 
     func stop() {
